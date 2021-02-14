@@ -1,0 +1,73 @@
+#!/usr/bin/env ruby
+
+require "fileutils"
+require "pathname"
+
+include FileUtils
+
+gem_name = ARGV[0]
+
+if gem_name.nil?
+  puts "usage: #{$0} gem_name"
+  exit 1
+end
+
+root = Pathname(__FILE__).dirname / ".."
+
+module_name = gem_name.split(/_/).map { |part|
+  part.capitalize
+}.join
+
+mkdir_p root / "lib"
+
+File.open(root / "lib" / "#{gem_name}.rb", "w") do |file|
+  file.puts "module #{module_name}"
+  file.puts "end"
+end
+
+mkdir_p root / "lib" / gem_name
+
+File.open(root / "lib" / gem_name / "version.rb", "w") do |file|
+  file.puts "module #{module_name}"
+  file.puts "  VERSION=\"1.0.0\""
+  file.puts "end"
+end
+
+gemspec = File.read("rubygem.gemspec")
+File.open(root / "#{gem_name}.gemspec","w") do |file|
+  file.puts "require_relative \"lib/#{gem_name}/version\""
+  file.puts
+  gemspec.split(/\n/).each do |line|
+    if line =~ /^\s*spec.name/
+      file.puts "  spec.name = \"#{gem_name}\""
+    elsif line =~ /^\s*spec.version/
+      file.puts "  spec.version = #{module_name}::VERSION"
+    elsif line.include?("«gem_name»")
+      file.puts line.gsub(/«gem_name»/,gem_name)
+    else
+      file.puts line
+    end
+  end
+end
+
+license = File.read(root / "LICENSE.md")
+File.open(root / "LICENSE.md","w") do |file|
+  license.split(/\n/).each_with_index do |line,index|
+    if index == 0
+      file.puts "[#{gem_name}] Copyright (2021) (David Copeland)(“Licensor”)"
+    else
+      file.puts line
+    end
+  end
+end
+
+readme = File.read(root / "README.md")
+File.open(root / "README.md","w") do |file|
+  license.split(/\n/).each_with_index do |line,index|
+    if index == 0
+      file.puts "# #{gem_name} - does a thing"
+    else
+      file.puts line
+    end
+  end
+end

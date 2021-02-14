@@ -1,0 +1,10 @@
+#!/bin/bash
+
+set -e
+echo "[bin/ci] Running tests"
+if [ -z $1 ]; then
+  bin/rspec --format=doc
+else
+  echo "[bin/ci] Generating JUnit XML output to $1"
+  bin/rspec --format RspecJunitFormatter --out $1 --format=doc
+fi

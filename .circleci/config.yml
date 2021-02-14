@@ -1,0 +1,34 @@
+version: 2.1
+orbs:
+  # See https://circleci.com/developer/orbs/orb/circleci/ruby
+  ruby: circleci/ruby@1.1.2
+jobs:                # keyword
+  test:              # my name for the job
+    parameters:      # keyword
+      ruby-version:  # my parameter name
+        type: string # type is a keyword
+    docker:          # keyword
+      - image: cimg/base:stable
+    steps:                                       # keyword
+      - checkout                                 # magic name
+      - ruby/install:                            # ruby/ is from the orb name, install is a command in that orb
+          version: << parameters.ruby-version >> # magic nonsense for param subst
+      - ruby/install-deps                        # another command from the ruby orb
+      - run:
+          name: "Create the test results directory because you can't just store_test_results with a file and if you do you do not get any sort of error because wtf is with this platform?"
+          command: mkdir -p /tmp/test-results
+      - run:
+          command: bin/ci /tmp/test-results/rspec_results.xml
+      - store_test_results:                      # store_test_results is magic from circle
+          path: /tmp/test-results                # path is a param to store_test_results and it must be a directory not a file
+      - store_artifacts:                         # store_artifacts is magic from circle
+          path: /tmp/test-results                # path is the param to store_artifacts
+workflows:              # keyword
+  all-rubies:           # my name for the workflow
+    jobs:               # keyword
+      - test:           # my name for the job
+          matrix:       # keyword
+            parameters: # keyword
+              # All rubies being maintained per this page:
+              # https://www.ruby-lang.org/en/downloads/branches/
+              ruby-version: [ "2.5", "2.6", "2.7", "3.0" ]
