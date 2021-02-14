@@ -13,7 +13,8 @@ jobs:                # keyword
       - checkout                                 # magic name
       - ruby/install:                            # ruby/ is from the orb name, install is a command in that orb
           version: << parameters.ruby-version >> # magic nonsense for param subst
-      - ruby/install-deps                        # another command from the ruby orb
+      - run:
+          command: "bin/setup"
       - run:
           name: "Create the test results directory because you can't just store_test_results with a file and if you do you do not get any sort of error because wtf is with this platform?"
           command: mkdir -p /tmp/test-results
