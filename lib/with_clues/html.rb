@@ -1,6 +1,6 @@
 module WithClues
   class Html
-    def dump(notifier, page)
+    def dump(notifier, page:, context:)
       if !page.respond_to?(:html)
         notifier.notify "Something may be wrong. page (#{page.class}) does not respond to #html"
         return

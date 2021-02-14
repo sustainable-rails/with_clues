@@ -4,21 +4,37 @@ require_relative "notifier"
 
 module WithClues
   module Method
+    @@clue_classes = {
+      require_page: [
+        WithClues::BrowserLogs,
+        WithClues::Html,
+      ],
+      custom: []
+    }
     # Wrap any assertion with this method to get more
     # useful context and diagnostics when a test is
     # unexpectedly failing
     def with_clues(context=nil, &block)
-      block.()
-    rescue Exception => ex
       notifier = WithClues::Notifier.new($stdout)
+      block.()
+      notifier.notify "A passing test has been wrapped with `with_clues`. You should remove the call to `with_clues`"
+    rescue Exception => ex
       notifier.notify context
+      @@clue_classes[:custom].each do |klass|
+        klass.new.dump(notifier, context: context)
+      end
       if !defined?(page)
         raise ex
       end
       notifier.notify "Test failed: #{ex.message}"
-      WithClues::BrowserLogs.new.dump(notifier,page)
-      WithClues::Html.new.dump(notifier,page)
+      @@clue_classes[:require_page].each do |klass|
+        klass.new.dump(notifier, context: context, page: page)
+      end
       raise ex
+    end
+
+    def self.use_custom_clue(klass)
+      @@clue_classes[:custom] << klass
     end
   end
 end

@@ -1,6 +1,6 @@
 module WithClues
   class BrowserLogs
-    def dump(notifier, page)
+    def dump(notifier, page:, context:)
       if !page.respond_to?(:driver)
         notifier.notify "Something may be wrong. page (#{page.class}) does not respond to #driver"
         return
@@ -17,7 +17,7 @@ module WithClues
             notifier.notify "} END BROWSER LOGS"
           else
             notifier.notify "NO BROWSER LOGS: page.driver.browser.manage #{page.driver.browser.manage.class} does not respond to #logs"
-        end
+          end
         else
           notifier.notify "NO BROWSER LOGS: page.driver.browser #{page.driver.browser.class} does not respond to #manage"
         end

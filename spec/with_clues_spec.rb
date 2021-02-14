@@ -231,12 +231,13 @@ RSpec.describe WithClues::Method do
       end
     end
     context "when code does not raise an exception" do
-      it "does nothing" do
+      it "logs that you should remove with_clues" do
         expect {
           with_clues do
             expect(true).to eq(true)
           end
         }.not_to raise_error
+        expect(fake_stdout.string).to match(/passing.*remove/)
       end
     end
   end
