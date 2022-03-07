@@ -1,0 +1,84 @@
+#!/usr/bin/env ruby
+
+require "yaml"
+require "pathname"
+
+circle_config = {
+  "version" => "2.1",
+  "jobs" => {},
+  "workflows" => {
+    "version" => 2,
+    "all_rubies" => {
+      "jobs" => [
+      ],
+    },
+  }
+}
+
+supported_rubies = [
+  "2.6",
+  "2.7",
+  "3.0",
+  "3.1",
+]
+
+supported_rubies.each do |ruby_verison|
+
+  test_results_dir = "/tmp/test-results/#{ruby_verison}"
+  job_name = "ruby__#{ruby_verison.gsub(/\./,"_")}"
+
+  job = {
+    "docker" => [
+      {
+        "image" => "cimg/ruby:#{ruby_verison}",
+      }
+    ],
+    "steps" => [
+      "checkout",
+      {
+        "run" => {
+          "name" => "Setup for build",
+          "command" => "bin/setup",
+        }
+      },
+      {
+        "run" => {
+          "name" => "Ensure bin/setup is idempotent",
+          "command" => "bin/setup",
+        }
+      },
+      {
+        "run" => {
+          "name" => "Create the test results dir",
+          "command" => "mkdir -p #{test_results_dir}",
+        }
+      },
+      {
+        "run" => {
+          "name" => "Run all tests",
+          "command" => "bin/ci #{test_results_dir}/rspec_results.xml",
+        }
+      },
+      {
+        "store_test_results" => {
+          "path" => test_results_dir,
+        }
+      },
+      {
+        "store_artifacts" => {
+          "path" => test_results_dir,
+        }
+      },
+    ]
+  }
+  circle_config["jobs"][job_name] = job
+  circle_config["workflows"]["all_rubies"]["jobs"] << job_name
+end
+
+circle_config_file = (Pathname(__FILE__).dirname / ".." / ".circleci" / "config.yml").expand_path
+File.open(circle_config_file,"w") do |file|
+  file.puts "# THIS IS GENERATED - DO NOT EDIT"
+  file.puts "# regenerate with bin/mk_circle_config"
+  file.puts "# You are very welcome"
+  file.puts circle_config.to_yaml
+end
