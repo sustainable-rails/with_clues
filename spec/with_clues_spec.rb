@@ -134,27 +134,63 @@ RSpec.describe WithClues::Method do
               end
             end
             context "but browser does not respond to manage" do
-              it "raises and prints a warning" do
-                def page
-                  OpenStruct.new(
-                    html: "some html",
-                    driver: OpenStruct.new(
-                      browser: OpenStruct.new()
+              context "yet it responds to logs" do
+                it "dumps the logs" do
+                  def page
+                    logs = LogsFromSomeBrowser.new([
+                      "log line 1",
+                      "log line 2",
+                      "log line 3",
+                    ])
+                    OpenStruct.new(
+                      html: "some html",
+                      driver: OpenStruct.new(
+                        browser: OpenStruct.new(
+                          logs: logs
+                        )
+                      )
                     )
-                  )
-                end
-                expect {
-                  with_clues do
-                    expect(true).to eq(false)
                   end
-                }.to raise_error(RSpec::Expectations::ExpectationNotMetError)
-                aggregate_failures do
-                  expect(fake_stdout.string).to match(/NO BROWSER LOGS/)
-                  expect(fake_stdout.string).to match(/#{page.driver.browser.class}/)
-                  expect(fake_stdout.string).to match(/does not respond to #manage/)
-                  expect(fake_stdout.string).to match(/\[ with_clues \] HTML \{/)
-                  expect(fake_stdout.string).to match(/\[ with_clues \] \} END HTML/)
-                  expect(fake_stdout.string).to match(/some html/)
+                  expect {
+                    with_clues do
+                      expect(true).to eq(false)
+                    end
+                  }.to raise_error(RSpec::Expectations::ExpectationNotMetError)
+                  aggregate_failures do
+                    expect(fake_stdout.string).to match(/\[ with_clues \] BROWSER LOGS \{/)
+                    expect(fake_stdout.string).to match(/\[ with_clues \] \} END BROWSER LOGS/)
+                    expect(fake_stdout.string).to match(/log line 1/)
+                    expect(fake_stdout.string).to match(/log line 2/)
+                    expect(fake_stdout.string).to match(/log line 3/)
+                    expect(fake_stdout.string).to match(/\[ with_clues \] HTML \{/)
+                    expect(fake_stdout.string).to match(/\[ with_clues \] \} END HTML/)
+                    expect(fake_stdout.string).to match(/some html/)
+                  end
+                end
+              end
+              context "and it does not respond to logs" do
+                it "raises and prints a warning" do
+                  def page
+                    OpenStruct.new(
+                      html: "some html",
+                      driver: OpenStruct.new(
+                        browser: OpenStruct.new()
+                      )
+                    )
+                  end
+                  expect {
+                    with_clues do
+                      expect(true).to eq(false)
+                    end
+                  }.to raise_error(RSpec::Expectations::ExpectationNotMetError)
+                  aggregate_failures do
+                    expect(fake_stdout.string).to match(/NO BROWSER LOGS/)
+                    expect(fake_stdout.string).to match(/#{page.driver.browser.class}/)
+                    expect(fake_stdout.string).to match(/does not respond to #manage/)
+                    expect(fake_stdout.string).to match(/\[ with_clues \] HTML \{/)
+                    expect(fake_stdout.string).to match(/\[ with_clues \] \} END HTML/)
+                    expect(fake_stdout.string).to match(/some html/)
+                  end
                 end
               end
             end
