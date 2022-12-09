@@ -16,22 +16,22 @@ module WithClues
           notifier.notify "} END BROWSER LOGS"
         end
       else
-        notifier.notify "NO BROWSER LOGS: page.driver #{page.driver.class} does not respond to #browser"
+        notifier.notify "[with_clues: #{self.class}] NO BROWSER LOGS: page.driver #{page.driver.class} does not respond to #browser"
       end
     end
 
   private
 
     def locate_logs(browser, notifier:)
-      if browser.respond_to?(:manage)
+      if browser.respond_to?(:logs)
+        return browser.logs
+      elsif browser.respond_to?(:manage)
         if browser.manage.respond_to?(:logs)
           return browser.manage.logs
         end
-        notifier.notify "NO BROWSER LOGS: page.driver.browser.manage #{browser.manage.class} does not respond to #logs"
-      elsif browser.respond_to?(:logs)
-        return browser.logs
+        notifier.notify "[with_clues: #{self.class}] NO BROWSER LOGS: page.driver.browser.manage #{browser.manage.class} does not respond to #logs"
       else
-        notifier.notify "NO BROWSER LOGS: page.driver.browser #{browser.class} does not respond to #manage or #logs"
+        notifier.notify "[with_clues: #{self.class}] NO BROWSER LOGS: page.driver.browser #{browser.class} does not respond to #manage or #logs"
       end
       nil
     end
