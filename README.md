@@ -107,13 +107,15 @@ There are three clues included:
 `with_clues` is intended as a diagnostic tool you can develop and enhance over time.  As your team writes more code or develops
 more conventions, you can develop diagnostics as well.
 
-To add one, create a class that implements `dump(notifier, context:)`:
+To add one, create a class that implements `dump(notifier, context:)` or `dump(notifier, context:, page:)`:
 
 * `notifier` is a `WithClues::Notifier` that you should use to produce output:
   * `notify` - output text, preceded with `[ with_clues ]` (this is so you can tell output from your code vs from `with_clues`)
   * `blank_line` - a blank line (no prefix)
   * `notify_raw` - output text without a prefix, useful for removing ambiguity about what is being output
 * `context:` the context passed into `with_clues` (nil if it was omitted)
+* `page:` If `dump` requires this keyword, your clue will only be used in a browser context when the Capybara `page` object is available.
+In that case, that is what is passed in.
 
 For example, suppose you want to output information about an Active Record like so:
 
@@ -152,6 +154,9 @@ WithClues::Method.use_custom_clue ActiveRecordClues
 ```
 
 You can use multiple clues by repeatedly calling `use_custom_clue`
+
+Note that if your clue implements the three-arg version of `dump` ( `dump(notifier, context:, page:)` ), it will *only* be used when in
+a context where Capybara's `page` element in in play.
 
 ## Developing
 
