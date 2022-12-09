@@ -1,6 +1,7 @@
 require_relative "html"
 require_relative "browser_logs"
 require_relative "notifier"
+require_relative "private/custom_clue_method_analysis"
 
 module WithClues
   module Method
@@ -23,18 +24,25 @@ module WithClues
       @@clue_classes[:custom].each do |klass|
         klass.new.dump(notifier, context: context)
       end
-      if !defined?(page)
-        raise ex
-      end
-      notifier.notify "Test failed: #{ex.message}"
-      @@clue_classes[:require_page].each do |klass|
-        klass.new.dump(notifier, context: context, page: page)
+      if defined?(page)
+        notifier.notify "Test failed: #{ex.message}"
+        @@clue_classes[:require_page].each do |klass|
+          klass.new.dump(notifier, context: context, page: page)
+        end
       end
       raise ex
     end
 
     def self.use_custom_clue(klass)
-      @@clue_classes[:custom] << klass
+      dump_method = klass.instance_method(:dump)
+      analysis = WithClues::Private::CustomClueMethodAnalysis.from_method(dump_method)
+      if analysis.standard_implementation?
+        @@clue_classes[:custom] << klass
+      elsif analysis.requires_page_object?
+        @@clue_classes[:require_page] << klass
+      else
+        analysis.raise_exception!
+      end
     end
   end
 end
