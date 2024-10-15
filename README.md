@@ -6,8 +6,7 @@ Suppose you have this:
 expect(page).to have_content("My Awesome Site")
 ```
 
-And Capybara says that that content is not there and that is all it says.  You might slap in a `puts page.html` and try again.
-Instead, what if you could not do that and do this?
+And Capybara says that that content is not there and that is all it says.  You might slap in a `puts page.html` and try again. Instead, what if you could not do that and do this?
 
 ```ruby
 with_clues do
@@ -71,8 +70,7 @@ end
 
 ## Use
 
-In general, you would not want to wrap all tests with `with_clues`.  This is a diagnostic tool to allow you to get more
-information on a test that is failing.  As such, your workflow might be:
+In general, you would not want to wrap all tests with `with_clues`.  This is a diagnostic tool to allow you to get more information on a test that is failing.  As such, your workflow might be:
 
 1. Notice a test failing that you cannot easily diagnose
 1. Wrap the failing assertion in `with_clues`:
@@ -89,8 +87,10 @@ information on a test that is failing.  As such, your workflow might be:
 
 There are three clues included:
 
-* Dumping HTML - when `page` exists, it will dump the contents of `page.html` when the test fails
-* Dumping Browser logs - for a browser-based test, it will dump anything that was `console.log`'ed
+* Dumping HTML - when `page` exists, it will dump the contents of `page.html` (for Selenium) or `page.content`
+(for Playwright) when the test fails
+* Dumping Browser logs - for a browser-based test, it will dump anything that was `console.log`'ed. This should
+work with Selenium and Playwright
 * Arbitrary context you pass in, for example when testing an Active Record
 
   ```ruby
@@ -107,13 +107,16 @@ There are three clues included:
 `with_clues` is intended as a diagnostic tool you can develop and enhance over time.  As your team writes more code or develops
 more conventions, you can develop diagnostics as well.
 
-To add one, create a class that implements `dump(notifier, context:)`:
+To add one, create a class that implements `dump(notifier, context:)` or `dump(notifier, context:, page:)` or
+`dump(notifier, context:, page:, captured_logs)`:
 
-* `notifier` is a `WithClues::Notifier` that you should use to produce output:
-  * `notify` - output text, preceded with `[ with_clues ]` (this is so you can tell output from your code vs from `with_clues`)
-  * `blank_line` - a blank line (no prefix)
-  * `notify_raw` - output text without a prefix, useful for removing ambiguity about what is being output
+* `notifier` is a `WithClues::Notifier` that you should use to produce output via the following methods:
+  * `notifier.notify` - output text, preceded with `[ with_clues ]` (this is so you can tell output from your code vs from `with_clues`)
+  * `notifier.blank_line` - a blank line (no prefix)
+  * `notifier.notify_raw` - output text without a prefix, useful for removing ambiguity about what is being output
 * `context:` the context passed into `with_clues` (nil if it was omitted)
+* `page:` will be given the Selenium or Playwright page object
+* `captured_logs:` for Playwright, this will be the browser console logs captured inside the block
 
 For example, suppose you want to output information about an Active Record like so:
 
