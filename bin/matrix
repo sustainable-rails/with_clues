@@ -1,0 +1,6 @@
+#!/usr/bin/env bash
+
+. dx/docker-compose.env
+for version in ${RUBY_VERSIONS[@]}; do
+  dx/exec -v $version bin/setup && dx/exec -v $version bin/ci
+done
