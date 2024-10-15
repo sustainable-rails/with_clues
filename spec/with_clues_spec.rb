@@ -257,11 +257,88 @@ RSpec.describe WithClues::Method do
             end
           end
         end
-        context "page does not respond to #html" do
-          context "page responds to #native" do
-            it "uses the output of native as the clues" do
+        context "but page does not respond to html" do
+          context "but it does respond to #content as in Playwright" do
+            it "prints the HTML" do
               def page
-                OpenStruct.new(native: "some html", driver: OpenStruct.new())
+                OpenStruct.new(
+                  content: "some html",
+                )
+              end
+              expect {
+                with_clues do
+                  expect(true).to eq(false)
+                end
+              }.to raise_error(RSpec::Expectations::ExpectationNotMetError)
+              aggregate_failures do
+                expect(fake_stdout.string).to match(/\[ with_clues \] HTML \{/)
+                expect(fake_stdout.string).to match(/\[ with_clues \] \} END HTML/)
+                expect(fake_stdout.string).to match(/some html/)
+              end
+            end
+            context "it also responds to on to record console logs" do
+              it "includes those logs after the HTML" do
+                def page
+                  @page ||= begin
+                              page = OpenStruct.new(
+                                content: "some html"
+                              )
+                              def page.on(event,block)
+                                if event == "console"
+                                  @block = block
+                                end
+                              end
+                              def page.trigger_logs
+                                @block.(OpenStruct.new(text: "first console log"))
+                                @block.(OpenStruct.new(text: "second console log"))
+                              end
+                              page
+                            end
+                end
+                expect {
+                  with_clues do
+                    page.trigger_logs
+                    expect(true).to eq(false)
+                  end
+                }.to raise_error(RSpec::Expectations::ExpectationNotMetError)
+                aggregate_failures do
+                  expect(fake_stdout.string).to match(/\[ with_clues \] HTML \{/)
+                  expect(fake_stdout.string).to match(/\[ with_clues \] \} END HTML/)
+                  expect(fake_stdout.string).to match(/some html/)
+                  expect(fake_stdout.string).to match(/\[ with_clues \] LOGS \{/)
+                  expect(fake_stdout.string).to match(/\[ with_clues \] \} END LOGS/)
+                  expect(fake_stdout.string).to match(/first console log/)
+                  expect(fake_stdout.string).to match(/second console log/)
+                end
+              end
+            end
+          end
+          context "nor does it respond to #content" do
+            it "raises and prints a warning" do
+              def page
+                OpenStruct.new(
+                  driver: OpenStruct.new()
+                )
+              end
+              expect {
+                with_clues do
+                  expect(true).to eq(false)
+                end
+              }.to raise_error(RSpec::Expectations::ExpectationNotMetError)
+              aggregate_failures do
+                expect(fake_stdout.string).to match(/Something may be wrong/)
+                expect(fake_stdout.string).to match(/#{page.class}/)
+                expect(fake_stdout.string).to match(/does not respond to #html/)
+              end
+            end
+          end
+          context "page does respond to #native" do
+            it "uses native to access HTML" do
+                #OpenStruct.new(native: "some html", driver: OpenStruct.new())
+              def page
+                OpenStruct.new(
+                  native: "some html",
+                )
               end
               expect {
                 with_clues do
@@ -287,7 +364,7 @@ RSpec.describe WithClues::Method do
               }.to raise_error(RSpec::Expectations::ExpectationNotMetError)
               aggregate_failures do
                 expect(fake_stdout.string).to include("Something may be wrong")
-                expect(fake_stdout.string).to include("does not respond to #html or #native")
+                expect(fake_stdout.string).to include("does not respond to #html, #native, or #content")
               end
             end
           end
