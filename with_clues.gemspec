@@ -1,13 +1,11 @@
 require_relative "lib/with_clues/version"
 
-#require_relative "lib/«gem»/version"
-
 Gem::Specification.new do |spec|
   spec.name = "with_clues"
   spec.version = WithClues::VERSION
   spec.authors       = ["Dave Copeland"]
   spec.email         = ["davec@naildrivin5.com"]
-  spec.summary       = %q{WTF does this do?}
+  spec.summary       = %q{Temporarily add context to failing tests to get more information, such as what HTML was being examined when a browser-based test fails.}
   spec.homepage      = "https://sustainable-rails.com"
   spec.license       = "Hippocratic"
 
