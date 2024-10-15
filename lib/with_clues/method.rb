@@ -17,6 +17,15 @@ module WithClues
     # unexpectedly failing
     def with_clues(context=nil, &block)
       notifier = WithClues::Notifier.new($stdout)
+      captured_logs = []
+      if defined?(page) && page.respond_to?(:on)
+        begin
+          page.on("console", ->(msg) { captured_logs << msg.text })
+        rescue => ex
+          raise ex
+          notifier.notify "'page' was defined and responds to #on, however invoking it generated an exception: #{ex}"
+        end
+      end
       block.()
       notifier.notify "A passing test has been wrapped with `with_clues`. You should remove the call to `with_clues`"
     rescue Exception => ex
@@ -27,7 +36,7 @@ module WithClues
       if defined?(page)
         notifier.notify "Test failed: #{ex.message}"
         @@clue_classes[:require_page].each do |klass|
-          klass.new.dump(notifier, context: context, page: page)
+          klass.new.dump(notifier, context: context, page: page, captured_logs: captured_logs)
         end
       end
       raise ex

@@ -14,15 +14,17 @@ module WithClues
 
           return BadParams.new(two_arg_method.errors)
 
-        elsif params.size == 3
-          three_arg_method = ThreeArgMethod.new(params)
+        elsif params.size == 4
+          three_arg_method = FourArgMethod.new(params)
           if three_arg_method.valid?
             return RequiresPageObject.new
           end
           return BadParams.new(three_arg_method.errors)
         end
 
-        BadParams.new([])
+        BadParams.new([
+          "dump (#{unbound_method.owner}) accepted #{params.size} arguments, not 2 or 4. Got: #{params.map(&:to_s).join(", ")}, should be one positional and either one keyword arg named 'context:' or three keyword args named 'context:', 'page:', and 'captured_logs:'"
+        ])
       end
 
       def standard_implementation?
@@ -62,6 +64,9 @@ module WithClues
             @name
           end
         end
+        def to_s
+          "#<#{self.class} #{name}/#{@type}"
+        end
       end
 
       class TwoArgMethod
@@ -84,7 +89,7 @@ module WithClues
             @errors << "Param #{param_number}, #{param.name}, is not a required keyword param"
           end
           if !param.named?(*allowed_names)
-            @errors << "Param #{param_number}, #{param.name}, should be named context:"
+            @errors << "Param #{param_number}, #{param.name}, should be one of #{allowed_names.join(',')}"
           end
         end
 
@@ -93,14 +98,15 @@ module WithClues
         end
       end
 
-      class ThreeArgMethod < TwoArgMethod
+      class FourArgMethod < TwoArgMethod
         def initialize(params)
           super(params)
           require_keyword(3,params[2])
+          require_keyword(4,params[3])
         end
       private
         def allowed_names
-          [ :context, :page ]
+          [ :context, :page, :captured_logs ]
         end
       end
 
@@ -126,7 +132,11 @@ module WithClues
 
     class BadParams < CustomClueMethodAnalysis
       def initialize(errors)
-        @message = errors.empty? ? DEFAULT_ERROR : errors.join(", ")
+        if errors.empty?
+          raise ArgumentError,"BadParams requires errors"
+        else
+          @message = errors.map(&:to_s).join(", ")
+        end
       end
 
       DEFAULT_ERROR = "dump must take one required param, one keyword param named context: and an optional keyword param named page:"

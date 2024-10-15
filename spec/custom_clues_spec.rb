@@ -14,7 +14,7 @@ RSpec.describe "custom clues" do
   end
 
   class MyCustomClueThatNeedsThePage
-    def dump(notifier, context:, page:)
+    def dump(notifier, context:, page:, captured_logs:)
       notifier.notify "YUP"
     end
   end
@@ -49,7 +49,7 @@ RSpec.describe "custom clues" do
           end
           expect {
             WithClues::Method.use_custom_clue(clazz)
-          }.to raise_error(NameError,/dump must take one required param, one keyword param named context: and an optional keyword param named page:/)
+          }.to raise_error(NameError,/accepted 1 arguments, not 2 or 4/)
         end
       end
       context "takes 2 args" do
@@ -74,21 +74,21 @@ RSpec.describe "custom clues" do
           end
         end
       end
-      context "takes 3 args" do
-        context "third arg is page:" do
+      context "takes 4 args" do
+        context "third arg is page: and fourth is captured_logs:" do
           it "works" do
             clazz = Class.new
-            clazz.define_method(:dump) do |x, context: , page:|
+            clazz.define_method(:dump) do |x, context: , page:, captured_logs:|
             end
             expect {
               WithClues::Method.use_custom_clue(clazz)
             }.not_to raise_error
           end
         end
-        context "second arg is page:, third is context:" do
+        context "second arg is page:, third is context: and fourth is captured_logs:" do
           it "works" do
             clazz = Class.new
-            clazz.define_method(:dump) do |x, page:, context: |
+            clazz.define_method(:dump) do |x, page:, context:, captured_logs:|
             end
             expect {
               WithClues::Method.use_custom_clue(clazz)
@@ -98,7 +98,7 @@ RSpec.describe "custom clues" do
         context "third arg is not page:" do
           it "raises an error" do
             clazz = Class.new
-            clazz.define_method(:dump) do |x, page:, foo: |
+            clazz.define_method(:dump) do |x, page:, foo:, captured_logs: |
             end
             expect {
               WithClues::Method.use_custom_clue(clazz)
@@ -106,14 +106,14 @@ RSpec.describe "custom clues" do
           end
         end
       end
-      context "takes 4 args" do
+      context "takes 3 args" do
         it "raises an error" do
           clazz = Class.new
-          clazz.define_method(:dump) do |x, page:, foo:, bar: |
+          clazz.define_method(:dump) do |x, page:, context:|
           end
           expect {
             WithClues::Method.use_custom_clue(clazz)
-          }.to raise_error(NameError,/dump must take one required param, one keyword param named context: and an optional keyword param named page:/)
+          }.to raise_error(NameError,/accepted 3 arguments, not 2 or 4/)
         end
       end
     end
