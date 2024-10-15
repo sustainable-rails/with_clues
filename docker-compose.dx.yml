@@ -1,0 +1,33 @@
+# THIS IS GENERATED - DO NOT EDIT
+
+services:
+  with-clues-3.1:
+    image: sustainable-rails/with-clues-dev:ruby-3.1
+    init: true
+    volumes:
+      - type: bind
+        source: "./"
+        target: "/root/work"
+        consistency: "consistent"
+    entrypoint: /root/show-help-in-app-container-then-wait.sh
+    working_dir: /root/work
+  with-clues-3.2:
+    image: sustainable-rails/with-clues-dev:ruby-3.2
+    init: true
+    volumes:
+      - type: bind
+        source: "./"
+        target: "/root/work"
+        consistency: "consistent"
+    entrypoint: /root/show-help-in-app-container-then-wait.sh
+    working_dir: /root/work
+  with-clues-3.3:
+    image: sustainable-rails/with-clues-dev:ruby-3.3
+    init: true
+    volumes:
+      - type: bind
+        source: "./"
+        target: "/root/work"
+        consistency: "consistent"
+    entrypoint: /root/show-help-in-app-container-then-wait.sh
+    working_dir: /root/work
