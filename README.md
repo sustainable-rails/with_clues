@@ -158,5 +158,22 @@ You can use multiple clues by repeatedly calling `use_custom_clue`
 
 ## Developing
 
-* Get set up with `bin/setup`
-* Run tests with `bin/ci`
+* `dx/build` will create Docker images to work in
+* `dx/start` will start Docker containers for the three supported Rubies
+* `dx/exec -v «ruby version» bash` will "log in" to the container for that version of ruby
+  - `bin/setup` inside the container will set stuff up
+  - `bin/ci` inside the container will run tests
+
+### Testing Against All Versions
+
+CircleCI doesn't work, really, if you think about it.  80% of the time it works every time.
+
+Instead:
+
+1. `dx/build`
+2. `dx/start`
+3. `dx/exec -v 3.1 bin/setup && dx/exec -v 3.1 bin/ci`
+4. `dx/exec -v 3.2 bin/setup && dx/exec -v 3.2 bin/ci`
+5. `dx/exec -v 3.3 bin/setup && dx/exec -v 3.3 bin/ci`
+
+This, as it turns out, is *way* easier than CircleCI.
