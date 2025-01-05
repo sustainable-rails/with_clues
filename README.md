@@ -161,5 +161,12 @@ a context where Capybara's `page` element in in play.
 
 ## Developing
 
-* Get set up with `bin/setup`
-* Run tests with `bin/ci`
+This uses a Docker-based setup to allow running tests and doing development across all supported Rubies.
+
+1. Install Docker
+2. `dx/build`
+3. `dx/start`
+4. `dx/exec -v «version» bash` - runs bash "inside" the container for Ruby `«version»`
+5. `dx/exec -v «version» bin/setup` - install dependencies for Ruby `«version»`
+6. `dx/exec -v «version» bin/ci` - after `bin/setup` will run all tests.
+7. `bin/matrix` - runs all tests on all supported Rubies
